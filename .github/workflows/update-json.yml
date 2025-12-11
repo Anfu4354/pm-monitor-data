@@ -2,15 +2,16 @@ name: update-json
 
 on:
   schedule:
-    - cron: '*/30 * * * *'   # every 30 minutes
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:
-  contents: write   # allow commit/write to repo
+  contents: write
 
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,36 +26,34 @@ jobs:
           python -m pip install --upgrade pip
           pip install earthengine-api PyGithub
 
-      - name: Install Google Cloud SDK (for optional gcloud; not required)
-        run: |
-          sudo apt-get update && sudo apt-get install -y wget apt-transport-https ca-certificates gnupg
-          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" \
-            | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-          sudo apt-get update && sudo apt-get install -y google-cloud-sdk
-
-      - name: Prepare Earth Engine service account key
+      - name: Save Earth Engine service account key
         env:
-          EE_PRIVATE_KEY: ${{ secrets.EE_PRIVATE_KEY }}   # JSON content (multiline)
+          EE_PRIVATE_KEY: ${{ secrets.EE_PRIVATE_KEY }}
         run: |
-          echo "$EE_PRIVATE_KEY" > /tmp/ee-key.json
+          echo "$EE_PRIVATE_KEY" > ee-key.json
 
-      - name: Authenticate Earth Engine (service account)
+      - name: Authenticate Earth Engine (new API)
         env:
-          EE_ACCOUNT: ${{ secrets.EE_ACCOUNT }}   # service account email
+          EE_SERVICE_ACCOUNT: ${{ secrets.EE_ACCOUNT }}   # service account email
         run: |
-          # Authenticate earthengine CLI using service account + key
-          earthengine authenticate --quiet --service_account $EE_ACCOUNT --key_file /tmp/ee-key.json
+          python3 - <<EOF
+import ee
+
+creds = ee.ServiceAccountCredentials(
+    email="${EE_SERVICE_ACCOUNT}",
+    key_file="ee-key.json"
+)
+ee.Initialize(credentials=creds)
+print("Earth Engine authentication successful.")
+EOF
 
       - name: Run updater
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # this is automatically provided by Actions as well
-        run: |
-          python update_json.py
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python update_json.py
 
-
-      # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
           echo Add other actions to build,
           echo test, and deploy your project.
+
