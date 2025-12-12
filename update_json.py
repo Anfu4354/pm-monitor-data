@@ -24,19 +24,14 @@ from github import Github, Auth
 # -------------------------
 # INITIALIZE EARTH ENGINE
 # -------------------------
+# GitHub Actions: authenticate.py already ran ee.Initialize(...)
+# Local machine: allow normal ee.Initialize() without browser fallback
+
 try:
-    # Try normal initialization (works on GH Actions)
-    ee.Initialize(project="reference-bee-457022-d6")
-    print("✓ EE initialized (project mode)")
+    ee.Initialize()
+    print("✓ EE initialized")
 except Exception as e:
-    print("⚠ EE project initialization failed:", e)
-    print("→ Trying interactive local authentication...")
-    try:
-        ee.Authenticate()
-        ee.Initialize()
-        print("✓ EE initialized after local authentication")
-    except Exception as e2:
-        raise RuntimeError("❌ Earth Engine authentication failed.") from e2
+    raise RuntimeError("❌ EE failed to initialize. Did you run authenticate.py locally?") from e
 
 # -------------------------
 # CONFIG
@@ -245,3 +240,4 @@ upload_json(OUT_ANNUAL_TEMP, "annual_temperature.json")
 upload_json(OUT_HISTORY, HISTORY_LOCAL)
 
 print("🎉 All files uploaded.")
+
