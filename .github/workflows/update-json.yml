@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -26,24 +26,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install earthengine-api PyGithub
 
-      - name: Save Earth Engine service account key
+      # ---------------------------
+      # WRITE SERVICE ACCOUNT KEY
+      # ---------------------------
+      - name: Save Earth Engine private key
         env:
           EE_PRIVATE_KEY: ${{ secrets.EE_PRIVATE_KEY }}
         run: |
           echo "$EE_PRIVATE_KEY" > ee-key.json
-          
-      - name: Authenticate Earth Engine (new API)
-        env:
-          EE_SERVICE_ACCOUNT: ${{ secrets.EE_ACCOUNT }}
-        run: python3 authenticate.py
 
-      - name: Run updater
+      # ---------------------------
+      # AUTHENTICATE EARTH ENGINE
+      # ---------------------------
+      - name: Authenticate Earth Engine
+        env:
+          EE_ACCOUNT: ${{ secrets.EE_ACCOUNT }}
+        run: |
+          earthengine authenticate \
+            --quiet \
+            --service_account=$EE_ACCOUNT \
+            --key_file=ee-key.json
+
+      # ---------------------------
+      # RUN PYTHON SCRIPT
+      # ---------------------------
+      - name: Run update_json.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python update_json.py
-
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
 
