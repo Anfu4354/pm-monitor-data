@@ -31,21 +31,11 @@ jobs:
           EE_PRIVATE_KEY: ${{ secrets.EE_PRIVATE_KEY }}
         run: |
           echo "$EE_PRIVATE_KEY" > ee-key.json
-
+          
       - name: Authenticate Earth Engine (new API)
         env:
-          EE_SERVICE_ACCOUNT: ${{ secrets.EE_ACCOUNT }}   # service account email
-        run: |
-          python3 - <<EOF
-import ee
-
-creds = ee.ServiceAccountCredentials(
-    email="${EE_SERVICE_ACCOUNT}",
-    key_file="ee-key.json"
-)
-ee.Initialize(credentials=creds)
-print("Earth Engine authentication successful.")
-EOF
+          EE_SERVICE_ACCOUNT: ${{ secrets.EE_ACCOUNT }}
+        run: python3 authenticate.py
 
       - name: Run updater
         env:
