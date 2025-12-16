@@ -18,20 +18,23 @@ import time
 from github import Github, Auth
 
 # -------------------------
-# INITIALIZE EE (service account keys should be available in the environment when running locally)
-# For GitHub Actions we will authenticate beforehand; locally, ensure ee.Initialize() works.
+# INITIALIZE EARTH ENGINE (SERVICE ACCOUNT ONLY)
 # -------------------------
-# -------------------------
-# INITIALIZE EARTH ENGINE
-# -------------------------
-# GitHub Actions: authenticate.py already ran ee.Initialize(...)
-# Local machine: allow normal ee.Initialize() without browser fallback
+SERVICE_ACCOUNT = os.environ.get("EE_ACCOUNT")
+KEY_FILE = "ee-key.json"
+PROJECT_ID = "reference-bee-457022-d6"
 
-try:
-    ee.Initialize()
-    print("✓ EE initialized")
-except Exception as e:
-    raise RuntimeError("❌ EE failed to initialize. Did you run authenticate.py locally?") from e
+if not SERVICE_ACCOUNT:
+    raise RuntimeError("EE_ACCOUNT environment variable not set")
+
+creds = ee.ServiceAccountCredentials(
+    SERVICE_ACCOUNT,
+    KEY_FILE
+)
+
+ee.Initialize(credentials=creds, project=PROJECT_ID)
+print("✓ Earth Engine initialized with service account")
+
 
 # -------------------------
 # CONFIG
@@ -240,4 +243,5 @@ upload_json(OUT_ANNUAL_TEMP, "annual_temperature.json")
 upload_json(OUT_HISTORY, HISTORY_LOCAL)
 
 print("🎉 All files uploaded.")
+
 
