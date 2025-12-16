@@ -26,32 +26,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install earthengine-api PyGithub
 
-      # ---------------------------
-      # WRITE SERVICE ACCOUNT KEY
-      # ---------------------------
-      - name: Save Earth Engine private key
+      - name: Write Earth Engine key file
         env:
           EE_PRIVATE_KEY: ${{ secrets.EE_PRIVATE_KEY }}
         run: |
           echo "$EE_PRIVATE_KEY" > ee-key.json
 
-      # ---------------------------
-      # AUTHENTICATE EARTH ENGINE
-      # ---------------------------
-      - name: Authenticate Earth Engine
+      - name: Run update script
         env:
           EE_ACCOUNT: ${{ secrets.EE_ACCOUNT }}
-        run: |
-          earthengine authenticate \
-            --quiet \
-            --service_account=$EE_ACCOUNT \
-            --key_file=ee-key.json
-
-      # ---------------------------
-      # RUN PYTHON SCRIPT
-      # ---------------------------
-      - name: Run update_json.py
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python update_json.py
 
